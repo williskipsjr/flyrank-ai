@@ -202,7 +202,7 @@ def delete_task(task_id: int):
 
     return None
 
-
+#Updated even these endpoints to use the database instead of in-memory list. Now all CRUD operations are persistent.
 @app.get("/stats", summary="Task stats")
 def get_stats():
     with get_connection() as conn:
@@ -212,6 +212,8 @@ def get_stats():
     open_tasks = total - done
     return {"total": total, "done": done, "open": open_tasks}
 
+
+#including this endpoint to reset the database to the starter set of tasks. This is useful for testing and development.
 @app.post("/reset", summary="Reset tasks to the starter set")
 def reset_tasks():
     with get_connection() as conn:
