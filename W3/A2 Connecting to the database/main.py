@@ -12,13 +12,14 @@ app = FastAPI()
 # Database path for SQLite.
 DB_PATH = Path(__file__).with_name("tasks.db")
 
-
+# Function to get a database connection.
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
 
+# Function to convert a database row to a task dictionary.
 def row_to_task(row):
     return {
         "id": row["id"],
@@ -26,16 +27,18 @@ def row_to_task(row):
         "done": bool(row["done"]),
     }
 
+# Starter data used on first boot and whenever /reset is called.
+# We removed id from the seed data. SQLite will create ids automatically.
 
 def seed_tasks() -> list[dict]:
-    # Starter data used on first boot and whenever /reset is called.
     return [
-        {"id": 1, "title": "Buy milk", "done": False},
-        {"id": 2, "title": "Walk the dog", "done": True},
-        {"id": 3, "title": "Read FastAPI docs", "done": False},
+        {"title": "Buy milk", "done": False},
+        {"title": "Walk the dog", "done": True},
+        {"title": "Read FastAPI docs", "done": False},
     ]
 
 
+# Initialize the database and seed it with starter tasks if empty.
 def init_db():
     with get_connection() as conn:
         conn.execute(
@@ -56,9 +59,21 @@ def init_db():
                 [(task["title"], int(task["done"])) for task in seed_tasks()],
             )
 
+# What this does:
 
+# CREATE TABLE IF NOT EXISTS creates the tasks table only if it is missing.
+
+# SELECT COUNT(*) checks how many tasks already exist.
+
+# If there are 0 tasks, insert the 3 starter tasks.
+
+# If there are already tasks, do not seed again.
+
+
+
+# Call init_db() when the app starts to ensure the database is ready.
 init_db()
-tasks = seed_tasks()
+
 
 
 class TaskCreate(BaseModel):
@@ -74,9 +89,9 @@ class TaskUpdate(BaseModel):
 
 def next_task_id() -> int:
     # Find the next available task id.
-    if not tasks:
-        return 1
-    return max(task["id"] for task in tasks) + 1
+    with get_connection() as conn:
+        result = conn.execute("SELECT MAX(id) AS max_id FROM tasks").fetchone()
+        return (result["max_id"] or 0) + 1
 
 
 @app.get("/", summary="API info")
@@ -134,54 +149,79 @@ def create_task(payload: TaskCreate):
     if not payload.title.strip():
         raise HTTPException(status_code=400, detail="Title is required")
 
-    # Build the new task and store it in memory.
-    task = {
-        "id": next_task_id(),
-        "title": payload.title,
-        "done": False,
-    }
-    tasks.append(task)
-    return task
+    with get_connection() as conn:
+        cursor = conn.execute(
+            "INSERT INTO tasks (title, done) VALUES (?, ?)",
+            (payload.title, 0),
+        )
+        task_id = cursor.lastrowid
+        row = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+
+    return row_to_task(row)
 
 
 @app.put("/tasks/{task_id}", summary="Update a task")
 def update_task(task_id: int, payload: TaskUpdate):
-    # Update the task when the id exists.
-    for task in tasks:
-        if task["id"] == task_id:
-            if payload.title is not None:
-                if not payload.title.strip():
-                    raise HTTPException(status_code=400, detail="Title must not be empty")
-                task["title"] = payload.title
-            if payload.done is not None:
-                task["done"] = payload.done
-            return task
+    with get_connection() as conn:
+        existing = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
 
-    raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+        if existing is None:
+            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+
+        title = existing["title"]
+        done = existing["done"]
+
+        if payload.title is not None:
+            if not payload.title.strip():
+                raise HTTPException(status_code=400, detail="Title must not be empty")
+            title = payload.title
+
+        if payload.done is not None:
+            done = int(payload.done)
+
+        conn.execute(
+            "UPDATE tasks SET title = ?, done = ? WHERE id = ?",
+            (title, done, task_id),
+        )
+        updated = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+
+    return row_to_task(updated)
 
 
 @app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete a task")
 def delete_task(task_id: int):
-    # Remove the task when the id exists.
-    for index, task in enumerate(tasks):
-        if task["id"] == task_id:
-            tasks.pop(index)
-            return None
+    with get_connection() as conn:
+        existing = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
 
-    raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+        if existing is None:
+            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+
+        conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+
+    return None
 
 
 @app.get("/stats", summary="Task stats")
 def get_stats():
-    # Compute aggregate values from the current in-memory task list.
-    total = len(tasks)
-    done = sum(1 for task in tasks if task["done"])
+    with get_connection() as conn:
+        total = conn.execute("SELECT COUNT(*) AS count FROM tasks").fetchone()["count"]
+        done = conn.execute("SELECT COUNT(*) AS count FROM tasks WHERE done = 1").fetchone()["count"]
+
     open_tasks = total - done
     return {"total": total, "done": done, "open": open_tasks}
 
 @app.post("/reset", summary="Reset tasks to the starter set")
 def reset_tasks():
-    # Reset the task list to the original seed tasks.
-    tasks.clear()
-    tasks.extend(seed_tasks())
-    return {"message": "Tasks reset to starter data", "total": len(tasks)}
+    with get_connection() as conn:
+        conn.execute("DELETE FROM tasks")
+        conn.executemany(
+            "INSERT INTO tasks (title, done) VALUES (?, ?)",
+            [(task["title"], int(task["done"])) for task in seed_tasks()],
+        )
+        total = conn.execute("SELECT COUNT(*) AS count FROM tasks").fetchone()["count"]
+
+    return {"message": "Tasks reset to starter data", "total": total}
+
+
+
+
