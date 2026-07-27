@@ -96,27 +96,36 @@ def health():
 
 @app.get("/tasks", summary="List tasks (with optional filtering/search)")
 def get_tasks(done: bool | None = None, search: str | None = None):
-    # Start from the full list, then apply optional filters.
-    filtered = tasks
+    query = "SELECT * FROM tasks"
+    params = []
+    conditions = []
 
-    # done=true or done=false returns only matching completion state.
     if done is not None:
-        filtered = [task for task in filtered if task["done"] == done]
+        conditions.append("done = ?")
+        params.append(int(done))
 
-    # search=milk performs a case-insensitive title match.
     if search is not None and search.strip():
-        term = search.strip().lower()
-        filtered = [task for task in filtered if term in task["title"].lower()]
-    return filtered
+        conditions.append("LOWER(title) LIKE ?")
+        params.append(f"%{search.strip().lower()}%")
+
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+
+    with get_connection() as conn:
+        rows = conn.execute(query, params).fetchall()
+
+    return [row_to_task(row) for row in rows]
 
 
 @app.get("/tasks/{task_id}", summary="Get one task")
 def get_task(task_id: int):
-    # Find one task by id.
-    for task in tasks:
-        if task["id"] == task_id:
-            return task
-    raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    with get_connection() as conn:
+        row = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+
+    return row_to_task(row)
 
 
 @app.post("/tasks", status_code=status.HTTP_201_CREATED, summary="Create a task")
