@@ -111,11 +111,11 @@ def get_tasks(done: bool | None = None, search: str | None = None):
     conditions = []
 
     if done is not None:
-        conditions.append("done = ?")
-        params.append(int(done))
+        conditions.append("done = %s")
+        params.append(done)
 
     if search is not None and search.strip():
-        conditions.append("LOWER(title) LIKE ?")
+        conditions.append("LOWER(title) LIKE %s")
         params.append(f"%{search.strip().lower()}%")
 
     if conditions:
@@ -130,7 +130,7 @@ def get_tasks(done: bool | None = None, search: str | None = None):
 @app.get("/tasks/{task_id}", summary="Get one task")
 def get_task(task_id: int):
     with get_connection() as conn:
-        row = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+        row = conn.execute("SELECT * FROM tasks WHERE id = %s", (task_id,)).fetchone()
 
     if row is None:
         raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
@@ -148,11 +148,11 @@ def create_task(payload: TaskCreate):
 
     with get_connection() as conn:
         cursor = conn.execute(
-            "INSERT INTO tasks (title, done) VALUES (?, ?)",
-            (payload.title, 0),
+            "INSERT INTO tasks (title, done) VALUES (%s, %s)",
+            (payload.title.strip(), False),
         )
         task_id = cursor.lastrowid
-        row = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+        row = conn.execute("SELECT * FROM tasks WHERE id = %s", (task_id,)).fetchone()
 
     return row_to_task(row)
 
@@ -160,7 +160,7 @@ def create_task(payload: TaskCreate):
 @app.put("/tasks/{task_id}", summary="Update a task")
 def update_task(task_id: int, payload: TaskUpdate):
     with get_connection() as conn:
-        existing = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+        existing = conn.execute("SELECT * FROM tasks WHERE id = %s", (task_id,)).fetchone()
 
         if existing is None:
             raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
@@ -174,13 +174,13 @@ def update_task(task_id: int, payload: TaskUpdate):
             title = payload.title
 
         if payload.done is not None:
-            done = int(payload.done)
+            done = payload.done
 
         conn.execute(
-            "UPDATE tasks SET title = ?, done = ? WHERE id = ?",
+            "UPDATE tasks SET title = %s, done = %s WHERE id = %s",
             (title, done, task_id),
         )
-        updated = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+        updated = conn.execute("SELECT * FROM tasks WHERE id = %s", (task_id,)).fetchone()
 
     return row_to_task(updated)
 
@@ -188,12 +188,12 @@ def update_task(task_id: int, payload: TaskUpdate):
 @app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete a task")
 def delete_task(task_id: int):
     with get_connection() as conn:
-        existing = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+        existing = conn.execute("SELECT * FROM tasks WHERE id = %s", (task_id,)).fetchone()
 
         if existing is None:
             raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
 
-        conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+        conn.execute("DELETE FROM tasks WHERE id = %s", (task_id,))
 
     return None
 
@@ -202,7 +202,7 @@ def delete_task(task_id: int):
 def get_stats():
     with get_connection() as conn:
         total = conn.execute("SELECT COUNT(*) AS count FROM tasks").fetchone()["count"]
-        done = conn.execute("SELECT COUNT(*) AS count FROM tasks WHERE done = 1").fetchone()["count"]
+        done = conn.execute("SELECT COUNT(*) AS count FROM tasks WHERE done = TRUE").fetchone()["count"]
 
     open_tasks = total - done
     return {"total": total, "done": done, "open": open_tasks}
@@ -214,8 +214,8 @@ def reset_tasks():
     with get_connection() as conn:
         conn.execute("DELETE FROM tasks")
         conn.executemany(
-            "INSERT INTO tasks (title, done) VALUES (?, ?)",
-            [(task["title"], int(task["done"])) for task in seed_tasks()],
+            "INSERT INTO tasks (title, done) VALUES (%s, %s)",
+            [(task["title"], task["done"]) for task in seed_tasks()],
         )
         total = conn.execute("SELECT COUNT(*) AS count FROM tasks").fetchone()["count"]
 
