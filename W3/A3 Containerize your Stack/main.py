@@ -82,13 +82,6 @@ class TaskUpdate(BaseModel):
     done: bool | None = None
 
 
-def next_task_id() -> int:
-    # Find the next available task id.
-    with get_connection() as conn:
-        result = conn.execute("SELECT MAX(id) AS max_id FROM tasks").fetchone()
-        return (result["max_id"] or 0) + 1
-
-
 @app.get("/", summary="API info")
 def root():
     # Return basic API details.
@@ -148,11 +141,14 @@ def create_task(payload: TaskCreate):
 
     with get_connection() as conn:
         cursor = conn.execute(
-            "INSERT INTO tasks (title, done) VALUES (%s, %s)",
+            """
+                INSERT INTO tasks (title, done)
+                VALUES (%s, %s)
+                RETURNING *
+                """,
             (payload.title.strip(), False),
         )
-        task_id = cursor.lastrowid
-        row = conn.execute("SELECT * FROM tasks WHERE id = %s", (task_id,)).fetchone()
+        row = cursor.fetchone()
 
     return row_to_task(row)
 
@@ -180,7 +176,15 @@ def update_task(task_id: int, payload: TaskUpdate):
             "UPDATE tasks SET title = %s, done = %s WHERE id = %s",
             (title, done, task_id),
         )
-        updated = conn.execute("SELECT * FROM tasks WHERE id = %s", (task_id,)).fetchone()
+        updated = conn.execute(
+            """
+            UPDATE tasks
+            SET title = %s, done = %s
+            WHERE id = %s
+            RETURNING *
+            """,
+            (title, done, task_id),
+        ).fetchone()
 
     return row_to_task(updated)
 
@@ -215,7 +219,7 @@ def reset_tasks():
         conn.execute("DELETE FROM tasks")
         conn.executemany(
             "INSERT INTO tasks (title, done) VALUES (%s, %s)",
-            [(task["title"], task["done"]) for task in seed_tasks()],
+            seed_tasks(),
         )
         total = conn.execute("SELECT COUNT(*) AS count FROM tasks").fetchone()["count"]
 
