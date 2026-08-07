@@ -1,0 +1,13 @@
+### Here's Stage 0 Checkpoint
+
+(.venv) PS C:\Users\$$$$$$\########\*********\Internships\FlyRank AI\W3\A3 Containerize your Stack> docker ps
+CONTAINER ID   IMAGE         COMMAND                  CREATED      STATUS        PORTS                                         NAMES
+33734c9607de   postgres:16   "docker-entrypoint.s…"   9 days ago   Up 11 hours   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp   taskdb
+(.venv) PS C:\Users\$$$$$$\########\**********\Internships\FlyRank AI\W3\A3 Containerize your Stack> docker exec -it taskdb psql -U postgres -d tasks
+psql (16.14 (Debian 16.14-1.pgdg13+1))
+Type "help" for help.
+
+tasks=# \dt
+Did not find any relations.
+tasks=# \q
+(.venv) PS C:\Users\$$$$$$\########\**********\Internships\FlyRank AI\W3\A3 Containerize your Stack> 
