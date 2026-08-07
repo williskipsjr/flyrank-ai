@@ -131,8 +131,6 @@ def get_task(task_id: int):
     return row_to_task(row)
 
 
-#Ok so this will be my STAGE 2 COMMIT : "Stage 2: insert into database" as it worked
-
 @app.post("/tasks", status_code=status.HTTP_201_CREATED, summary="Create a task")
 def create_task(payload: TaskCreate):
     # Reject empty titles before saving.
