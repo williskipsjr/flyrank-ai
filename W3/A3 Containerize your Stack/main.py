@@ -170,10 +170,6 @@ def update_task(task_id: int, payload: TaskUpdate):
         if payload.done is not None:
             done = payload.done
 
-        conn.execute(
-            "UPDATE tasks SET title = %s, done = %s WHERE id = %s",
-            (title, done, task_id),
-        )
         updated = conn.execute(
             """
             UPDATE tasks
