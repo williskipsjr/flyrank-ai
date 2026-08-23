@@ -79,4 +79,18 @@ def profile(
             status_code=401,
             detail="Access Token required"
         )
-    return {"message": "Welcome back! This info is protected."}
+    try:
+        token = authorization.split(" ")[1]
+        response = supabase.auth.get_user(token)
+
+        user = response.user
+
+        return {"id": user.id,
+                "email": user.email
+                }
+    except Exception:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token"
+        )
+
