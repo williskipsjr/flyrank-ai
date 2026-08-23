@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from app.schemas import AuthRequest
 from app.auth import supabase
 
@@ -62,3 +62,21 @@ def login(data: AuthRequest):
             status_code=401,
             detail="Invalid login credentials"
         )
+
+    #    
+@app.get("/public/info")
+def public_info():
+    return {
+        "message": "Welcome Stranger! This info is public."
+    }
+
+@app.get("/protected/profile")
+def profile(
+    authorization: str = Header(None)
+):
+    if not authorization:
+        raise HTTPException(
+            status_code=401,
+            detail="Access Token required"
+        )
+    return {"message": "Welcome back! This info is protected."}
