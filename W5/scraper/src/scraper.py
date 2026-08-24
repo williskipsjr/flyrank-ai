@@ -10,12 +10,13 @@ from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
 
 import requests
+import json
 
 
 BASE_URL = "https://books.toscrape.com/"
 START_URL = "https://books.toscrape.com/catalogue/page-1.html"
 USER_AGENT = "FlyRankInternship-A9/1.0 (+https://github.com/your-username/polite-scraper)"
-TIMEOUT_SECONDS = 8
+TIMEOUT_SECONDS = 15
 REQUEST_DELAY_SECONDS = 0.5
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -106,11 +107,66 @@ def discover_book_urls(stats: dict[str, Any], max_pages: int = 3) -> tuple[list[
     return unique_urls, source_pages
 
 
+def clean_text(value: str | None) -> str | None:
+    if value is None:
+        return None
+    cleaned = " ".join(value.split())
+    return cleaned or None
+
+
+def extract_rating(article: BeautifulSoup) -> str:
+    rating = article.select_one("p.star-rating")
+    if not rating:
+        return "Unknown"
+    classes = rating.get("class", [])
+    for item in classes:
+        if item != "star-rating":
+            return item
+    return "Unknown"
+
+
+def extract_description(soup: BeautifulSoup) -> str | None:
+    heading = soup.find("div", id="product_description")
+    if not heading:
+        return None
+    paragraph = heading.find_next_sibling("p")
+    return clean_text(paragraph.get_text(" ", strip=True)) if paragraph else None
+
+
+def extract_raw_record(book_url: str, source_page: str, stats: dict[str, Any]) -> dict[str, Any]:
+    html = fetch_html(book_url, stats)
+    soup = soup_from_html(html)
+    product = soup.select_one("article.product_page")
+    if product is None:
+        raise ValueError(f"missing product area: {book_url}")
+
+    title = clean_text(product.select_one("h1").get_text(" ", strip=True))
+    price_text = clean_text(product.select_one("p.price_color").get_text(" ", strip=True))
+    availability_text = clean_text(product.select_one("p.availability").get_text(" ", strip=True))
+
+    return {
+        "title": title,
+        "product_url": book_url,
+        "price_text": price_text,
+        "availability_text": availability_text,
+        "rating_text": extract_rating(product),
+        "description": extract_description(soup),
+        "source_page": source_page,
+        "fetched_at": now_utc(),
+    }
+
 
 def run() -> None:
     stats = {
         "pages_fetched": 0,
         "cache_hits": 0,
     }
-    discover_book_urls(stats, max_pages=3)
+    book_urls, source_pages = discover_book_urls(stats, max_pages=3)
+    raw_records = [
+        extract_raw_record(url, source_pages[url], stats)
+        for url in book_urls
+    ]
+    print(json.dumps(raw_records[0], indent=2, ensure_ascii=False))
+    print(f"detail_pages={len(raw_records)}")
+
 
