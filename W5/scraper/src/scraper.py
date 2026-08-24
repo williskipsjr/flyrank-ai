@@ -9,6 +9,13 @@ from urllib.parse import urlparse, urljoin
 
 from bs4 import BeautifulSoup
 
+import re
+
+from pydantic import ValidationError
+
+from models import BookRecord
+
+
 import requests
 import json
 
@@ -156,6 +163,46 @@ def extract_raw_record(book_url: str, source_page: str, stats: dict[str, Any]) -
     }
 
 
+def parse_price_gbp(price_text: str) -> float:
+    match = re.search(r"([0-9]+(?:\.[0-9]+)?)", price_text)
+    if not match:
+        raise ValueError(f"could not parse price: {price_text!r}")
+    return float(match.group(1))
+
+
+def normalize_record(raw: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(raw)
+    normalized["price_gbp"] = parse_price_gbp(raw["price_text"])
+    return normalized
+
+
+def validate_records(raw_records: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    valid_by_url: dict[str, dict[str, Any]] = {}
+    errors: list[dict[str, Any]] = []
+
+    for raw in raw_records:
+        try:
+            normalized = normalize_record(raw)
+            record = BookRecord.model_validate(normalized)
+            valid_by_url[str(record.product_url)] = record.model_dump(mode="json")
+        except (ValidationError, ValueError) as exc:
+            errors.append({
+                "product_url": raw.get("product_url"),
+                "reason": str(exc),
+                "raw": raw,
+            })
+
+    return list(valid_by_url.values()), errors
+
+
+def write_json(path: Path, data: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+
+
+
 def run() -> None:
     stats = {
         "pages_fetched": 0,
@@ -166,7 +213,13 @@ def run() -> None:
         extract_raw_record(url, source_pages[url], stats)
         for url in book_urls
     ]
-    print(json.dumps(raw_records[0], indent=2, ensure_ascii=False))
-    print(f"detail_pages={len(raw_records)}")
+    valid_records, errors = validate_records(raw_records)
+
+    write_json(OUTPUT_DIR / "books.json", valid_records)
+    write_json(OUTPUT_DIR / "errors.json", errors)
+
+    print(f"valid_records={len(valid_records)}")
+    print(f"invalid_records={len(errors)}")
+
 
 
