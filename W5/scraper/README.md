@@ -140,25 +140,3 @@ This is one real `output/run-report.json` from a successful run:
   ]
 }
 ```
-
-## Checkpoint
-
-A stranger should be able to clone the repository, install dependencies, run one documented command, and get:
-
-- `output/books.json`
-- `output/run-report.json`
-
-Expected result:
-
-- `output/books.json` contains 60 validated records.
-- `output/run-report.json` reports counts, cache hits, duration, and failed pages.
-- `git log --oneline` shows 7+ meaningful stage commits.
-
-## Stage 6 Commit
-
-After updating this README and verifying the run, commit with:
-
-```powershell
-git add README.md output/books.json output/run-report.json
-git commit -m "Stage 6: publish scraper evidence"
-```
