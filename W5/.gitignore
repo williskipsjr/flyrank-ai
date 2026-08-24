@@ -1,0 +1,7 @@
+W5 - The polite scraper.pdf
+HANDS_ON_GUIDE.md
+
+__pycache__/
+.pytest_cache/
+cache/
+output/
