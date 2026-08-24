@@ -1,230 +1,97 @@
 # FlyRank AI Backend Engineering Internship
 
 <p align="center">
-  <img src="assets/flyrank-header.png" alt="FlyRank header" width="100%" />
+  <img src="assets/flyrank-header.png" alt="FlyRank AI backend internship header" width="100%" />
 </p>
 
 <p align="center">
-  <b>Backend systems, AI engineering fundamentals, API design, databases, containers, testing, and production-grade thinking.</b>
+  <b>FastAPI backends, CRUD APIs, databases, Docker, Supabase Auth, Swagger documentation, and production-minded learning.</b>
 </p>
 
 <p align="center">
-  <img src="https://skillicons.dev/icons?i=python,fastapi,postgres,docker,sqlite&theme=dark" alt="Python, FastAPI, PostgreSQL, Docker, and SQLite logos" />
+  <img src="https://skillicons.dev/icons?i=python,fastapi,sqlite,postgres,docker,supabase&theme=dark" alt="Python, FastAPI, SQLite, PostgreSQL, Docker, and Supabase logos" />
 </p>
 
 <p align="center">
-  <img alt="AI Systems" src="https://img.shields.io/badge/AI%20Systems-Production%20Grade-FF3D8B?style=for-the-badge&logo=openai&logoColor=white" />
-  <img alt="Backend Engineering" src="https://img.shields.io/badge/Backend%20Engineering-From%20Scratch%20to%20Prod-7C3AED?style=for-the-badge" />
+  <img alt="Backend Engineering" src="https://img.shields.io/badge/Backend%20Engineering-FastAPI-00E5FF?style=for-the-badge" />
+  <img alt="Databases" src="https://img.shields.io/badge/Databases-SQLite%20%2B%20PostgreSQL-FF2BD6?style=for-the-badge" />
+  <img alt="Supabase Auth" src="https://img.shields.io/badge/Supabase-%20Auth-39FF14?style=for-the-badge&logo=supabase&logoColor=000000&labelColor=050505" />
 </p>
 
 ---
 
 ## Table Of Contents
 
-- [What This Repo Is](#what-this-repo-is)
-- [Internship Mission](#internship-mission)
-- [Learning Roadmap](#learning-roadmap)
-- [Repository Map](#repository-map)
-- [Current Projects](#current-projects)
-- [Backend AI Engineering Track](#backend-ai-engineering-track)
-- [Testing Philosophy](#testing-philosophy)
-- [Production Mindset](#production-mindset)
-- [Quick Start](#quick-start)
-- [Tech Stack](#tech-stack)
-- [Progress Log](#progress-log)
+- [FlyRank AI Backend Engineering Internship](#flyrank-ai-backend-engineering-internship)
+  - [Table Of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Repository Map](#repository-map)
+  - [Weekly Work](#weekly-work)
+  - [What I Built](#what-i-built)
+    - [Week 2 - First CRUD API](#week-2---first-crud-api)
+    - [Week 3 - Databases And Containers](#week-3---databases-and-containers)
+    - [Week 4 - Supabase Authentication](#week-4---supabase-authentication)
+  - [Tech Stack](#tech-stack)
+  - [Quick Start](#quick-start)
+  - [Progress](#progress)
 
 ---
 
-## What This Repo Is
+## Overview
 
-This repository documents my journey as a **Backend AI Engineering Intern at FlyRank**.
+This repository documents my FlyRank AI backend engineering internship work from Week 2 through Week 4.
 
-It starts with the basics: building clean APIs, understanding request and response flow, writing CRUD endpoints, connecting persistent storage, and containerizing services. From there, the goal is to keep leveling up toward backend systems that can support real AI products: reliable APIs, database-backed workflows, automated tests, containerized environments, observability, and production-ready deployment habits.
-
-Think of this repo as my engineering lab:
+The learning path moved step by step:
 
 ```text
-small backend ideas -> tested services -> database-backed systems -> containerized stacks -> production-grade AI infrastructure
+in-memory API -> SQLite persistence -> PostgreSQL in Docker -> Supabase authentication
 ```
 
----
-
-## Internship Mission
-
-The mission is to build backend systems from scratch and understand every layer instead of treating production AI apps like magic.
-
-I am documenting:
-
-- How APIs are designed, built, tested, and improved.
-- How backend services evolve from in-memory demos to persistent database systems.
-- How to use FastAPI, SQLite, PostgreSQL, Docker, and Docker Compose.
-- How to think about reliability, validation, errors, environment variables, and deployment.
-- How AI engineering fits into backend architecture: data flow, model-facing APIs, task queues, retrieval systems, evaluation, monitoring, and safe production behavior.
-
----
-
-## Learning Roadmap
-
-| Stage | Focus | What I Am Building Toward |
-| --- | --- | --- |
-| 1 | Backend basics | Python APIs, HTTP methods, JSON, request bodies, status codes |
-| 2 | CRUD systems | Create, read, update, delete, validation, Swagger docs |
-| 3 | Persistence | SQLite databases, schemas, SQL queries, durable storage |
-| 4 | Production databases | PostgreSQL, environment variables, container networking |
-| 5 | Containers | Dockerfiles, Docker Compose, reproducible local stacks |
-| 6 | Testing | Unit tests, integration tests, API tests, database reset flows |
-| 7 | AI backend systems | Model APIs, RAG services, background jobs, evaluation pipelines |
-| 8 | Production readiness | Logging, monitoring, CI/CD, secrets, deployment, reliability |
-
----
+Each assignment builds on the previous one: first understanding API behavior, then adding persistence, then containerizing the stack, then protecting routes with real authentication.
 
 ## Repository Map
 
 ```text
 FlyRank AI/
 |-- README.md
-|-- .gitignore
 |-- assets/
-|   |-- flyrank-header.png
-|   |-- classic-dark.png
-|   `-- flyrank-internship-confirmation-...pdf
 |-- W2-A1-Building_my_first_CRUD_API/
 |   |-- README.md
 |   |-- main.py
-|   |-- AI-GEN-CRUD/
-|   |   |-- README.md
-|   |   `-- ai_gen.py
-|   `-- assets/
-|       `-- swagger ui screenshots/
+|   `-- AI-GEN-CRUD/
 |-- W3/
 |   |-- A2 Connecting to the database/
-|   |   |-- README.md
-|   |   |-- main.py
-|   |   `-- assets/
-|   |       `-- swagger ui screenshots/
 |   `-- A3 Containerize your Stack/
-|       |-- README.md
-|       |-- main.py
-|       |-- requirements.txt
-|       |-- Dockerfile
-|       |-- compose.yaml
-|       `-- Stage_0.txt
+`-- w4/
+    |-- README.md
+    |-- Swagger UI Screenshots/
+    `-- flyrank-auth-api/
 ```
 
----
+## Weekly Work
 
-## Current Projects
+| Week | Folder | Focus | Result |
+| --- | --- | --- | --- |
+| W2 | `W2-A1-Building_my_first_CRUD_API/` | FastAPI CRUD basics | Built a task API with in-memory storage, health checks, filters, search, stats, reset, curl examples, and Swagger screenshots. |
+| W3 A2 | `W3/A2 Connecting to the database/` | SQLite persistence | Replaced temporary Python-list storage with `tasks.db`, added schema creation, seed data, SQL queries, persistence checks, and DB Browser evidence. |
+| W3 A3 | `W3/A3 Containerize your Stack/` | Docker + PostgreSQL | Containerized the FastAPI task API, connected it to PostgreSQL 16 through Docker Compose, added environment variables and database verification steps. |
+| W4 | `w4/flyrank-auth-api/` | Supabase Auth | Built signup, login, logout, public routes, protected profile/dashboard routes, reusable `HTTPBearer` dependency, and Swagger authorization evidence. |
 
-| Folder | What It Does | Main Lesson |
-| --- | --- | --- |
-| `W2-A1-Building_my_first_CRUD_API/` | A FastAPI task API using an in-memory Python list. Includes health checks, task CRUD, filtering, search, stats, reset behavior, and Swagger screenshots. | Learn how HTTP APIs work before adding database complexity. |
-| `W2-A1-Building_my_first_CRUD_API/AI-GEN-CRUD/` | A small AI-generated CRUD experiment. | Compare generated backend code with hand-built backend understanding. |
-| `W3/A2 Connecting to the database/` | The same Task API upgraded from memory to SQLite persistence. | Separate API behavior from storage implementation. |
-| `W3/A3 Containerize your Stack/` | A containerized FastAPI + PostgreSQL stack using Docker Compose. | Run a backend service and database together like a real development environment. |
-| `assets/` | Repo-level images and internship proof assets. | Keep visual identity and documentation assets organized. |
+## What I Built
 
----
+### Week 2 - First CRUD API
 
-## Backend AI Engineering Track
+The Week 2 project is a small task manager API built with FastAPI. It supports creating, reading, updating, deleting, filtering, searching, resetting, and counting tasks. Data is intentionally stored in memory, which made it easier to understand HTTP methods, request bodies, status codes, and Swagger UI before adding a database.
 
-This repo is not only about CRUD APIs. CRUD is the foundation.
+### Week 3 - Databases And Containers
 
-The bigger direction is backend AI engineering:
+Week 3 upgraded the same task API into more realistic backend systems.
 
-- Build APIs that can serve AI features cleanly.
-- Store and retrieve data safely.
-- Design services that can later support embeddings, retrieval, model calls, async jobs, and evaluation.
-- Test backend behavior before trusting it.
-- Package systems so they run consistently on another machine.
-- Learn production habits early: environment config, secret hygiene, database migrations, logs, observability, and failure handling.
+In A2, task data moved into SQLite so it survives server restarts. In A3, the API moved to PostgreSQL running inside Docker Compose, with the FastAPI service and database service connected through container networking.
 
-The long-term target is to go from:
+### Week 4 - Supabase Authentication
 
-```text
-Hello FastAPI
-```
-
-to:
-
-```text
-Production AI backend with APIs, databases, queues, model integrations, evaluations, monitoring, and deployment.
-```
-
----
-
-## Testing Philosophy
-
-Every backend system should earn trust.
-
-My testing checklist as this repo grows:
-
-- **Smoke tests:** Does the app start?
-- **Health tests:** Does `/health` return a clean response?
-- **CRUD tests:** Can I create, read, update, and delete data?
-- **Validation tests:** Do invalid requests fail correctly?
-- **Persistence tests:** Does data survive restarts when using a database?
-- **Integration tests:** Does the API talk to the database correctly?
-- **Container tests:** Does the whole stack run from a clean Docker Compose setup?
-- **AI tests:** Are prompts, model outputs, retrieval results, and evaluation metrics checked instead of guessed?
-
----
-
-## Production Mindset
-
-Production-grade AI systems need more than a working demo.
-
-This repo will keep moving toward:
-
-- Clear API contracts.
-- Database-backed state.
-- Repeatable local setup.
-- Dockerized services.
-- Testable behavior.
-- Safe environment variable handling.
-- Useful logs and debugging signals.
-- Error responses that help clients recover.
-- Future AI workflows that can be evaluated, monitored, and improved.
-
----
-
-## Quick Start
-
-### Run The Week 2 In-Memory API
-
-```powershell
-cd "W2-A1-Building_my_first_CRUD_API"
-pip install fastapi uvicorn
-uvicorn main:app --reload
-```
-
-Open:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-### Run The Week 3 SQLite API
-
-```powershell
-cd "W3\A2 Connecting to the database"
-pip install fastapi uvicorn
-uvicorn main:app --reload
-```
-
-### Run The Week 3 Docker + PostgreSQL Stack
-
-```powershell
-cd "W3\A3 Containerize your Stack"
-docker compose up --build
-```
-
-Open:
-
-```text
-http://localhost:8000/docs
-```
-
----
+Week 4 added real authentication using Supabase Auth. The API now supports signup and login, returns access tokens, protects profile and dashboard routes, and uses a reusable FastAPI dependency with `HTTPBearer`. Swagger UI screenshots in `w4/Swagger UI Screenshots/` document signup, login, public responses, authorization, protected responses, and logout.
 
 ## Tech Stack
 
@@ -232,33 +99,71 @@ http://localhost:8000/docs
 | --- | --- |
 | Language | Python |
 | API framework | FastAPI |
-| Local server | Uvicorn |
+| Server | Uvicorn |
+| Docs/testing UI | Swagger UI |
 | Validation | Pydantic |
-| Databases | SQLite, PostgreSQL |
-| Database driver | sqlite3, psycopg |
+| Local database | SQLite |
+| Production-style database | PostgreSQL |
 | Containers | Docker, Docker Compose |
-| Documentation | Markdown, Swagger UI |
-| Testing direction | curl, Swagger UI, future pytest/API integration tests |
+| Auth | Supabase Auth, JWT bearer tokens |
+| Verification | curl, Swagger UI screenshots, database inspection |
 
----
+## Quick Start
 
-## Progress Log
+Run Week 2:
 
-- [x] Built a basic FastAPI CRUD API.
-- [x] Added endpoint documentation through Swagger UI.
-- [x] Tested API behavior with curl and browser-based docs.
-- [x] Upgraded in-memory storage to SQLite persistence.
-- [x] Verified database state with SQLite tooling.
-- [x] Containerized the backend with Docker.
-- [x] Connected FastAPI to PostgreSQL through Docker Compose.
+```powershell
+cd "W2-A1-Building_my_first_CRUD_API"
+pip install fastapi uvicorn
+uvicorn main:app --reload
+```
+
+Run Week 3 SQLite:
+
+```powershell
+cd "W3\A2 Connecting to the database"
+pip install fastapi uvicorn
+uvicorn main:app --reload
+```
+
+Run Week 3 Docker + PostgreSQL:
+
+```powershell
+cd "W3\A3 Containerize your Stack"
+docker compose up --build
+```
+
+Run Week 4 Auth API:
+
+```powershell
+cd "w4\flyrank-auth-api"
+pip install fastapi uvicorn supabase python-dotenv pydantic
+uvicorn app.main:app --reload
+```
+
+Open Swagger UI:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+## Progress
+
+- [x] Built a FastAPI CRUD API from scratch.
+- [x] Documented endpoints with Swagger UI and README examples.
+- [x] Tested API behavior with curl.
+- [x] Added SQLite persistence and database inspection.
+- [x] Containerized FastAPI with Docker.
+- [x] Connected FastAPI to PostgreSQL using Docker Compose.
+- [x] Added Supabase signup and login.
+- [x] Protected routes with JWT bearer authentication.
+- [x] Documented Swagger UI auth flow with screenshots.
 - [ ] Add automated tests with pytest.
 - [ ] Add CI checks.
-- [ ] Add structured logging.
-- [ ] Add AI-focused backend services.
-- [ ] Add evaluation and monitoring patterns for AI outputs.
+- [ ] Add deployment notes.
 
 ---
 
 <p align="center">
-  <b>Built from first principles. Tested like it matters. Documented as the system grows.</b>
+  <b>From simple endpoints to authenticated, database-backed backend systems.</b>
 </p>
