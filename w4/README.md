@@ -102,7 +102,7 @@ Execute parameter:
 
 ```json
 {
-  "email": "test@example.com",
+  "email": "mactahoe12@gmail.com",
   "password": "password123"
 }
 ```
@@ -115,7 +115,7 @@ Execute parameter:
 
 ```json
 {
-  "email": "test@example.com",
+  "email": "mactahoe12@gmail.com",
   "password": "password123"
 }
 ```
@@ -126,6 +126,19 @@ Expected status:
 201 Created
 ```
 
+Verified response summary:
+
+```json
+{
+  "id": "abd445a8-5398-45f4-b702-9080f5710c60",
+  "email": "mactahoe12@gmail.com",
+  "role": "authenticated",
+  "email_verified": true,
+  "is_anonymous": false,
+  "created_at": "2026-08-24T06:33:53.764886Z"
+}
+```
+
 ![SignUp Response](<Swagger UI Screenshots/SignUp Response.png>)
 
 ### 4. Login Response
@@ -134,7 +147,7 @@ Execute parameter:
 
 ```json
 {
-  "email": "test@example.com",
+  "email": "mactahoe12@gmail.com",
   "password": "password123"
 }
 ```
@@ -239,8 +252,8 @@ Expected response shape:
 
 ```json
 {
-  "id": "<supabase-user-id>",
-  "email": "test@example.com"
+  "id": "abd445a8-5398-45f4-b702-9080f5710c60",
+  "email": "mactahoe12@gmail.com"
 }
 ```
 
@@ -265,7 +278,7 @@ Expected response shape:
 
 ```json
 {
-  "message": "Welcome to your dashboard! test@example.com"
+  "message": "Welcome to your dashboard! mactahoe12@gmail.com"
 }
 ```
 
@@ -295,7 +308,7 @@ Signup:
 ```bash
 curl -X POST http://127.0.0.1:8000/auth/signup \
   -H "Content-Type: application/json" \
-  -d "{\"email\":\"test@example.com\",\"password\":\"password123\"}"
+  -d "{\"email\":\"mactahoe12@gmail.com\",\"password\":\"password123\"}"
 ```
 
 Login:
@@ -303,7 +316,7 @@ Login:
 ```bash
 curl -X POST http://127.0.0.1:8000/auth/login \
   -H "Content-Type: application/json" \
-  -d "{\"email\":\"test@example.com\",\"password\":\"password123\"}"
+  -d "{\"email\":\"mactahoe12@gmail.com\",\"password\":\"password123\"}"
 ```
 
 Public info:
