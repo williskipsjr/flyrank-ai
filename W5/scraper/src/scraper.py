@@ -42,6 +42,10 @@ def cache_path_for(url: str) -> Path:
     return CACHE_DIR / f"{slug}__{digest}.html"
 
 
+def should_retry(status_code: int | None) -> bool:
+    return status_code is None or 500 <= status_code <= 599
+
+
 def fetch_html(url: str, stats: dict[str, Any], *, use_cache: bool = True) -> str:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     path = cache_path_for(url)
@@ -52,19 +56,61 @@ def fetch_html(url: str, stats: dict[str, Any], *, use_cache: bool = True) -> st
         print(f"CACHE HIT {url} size={len(html)}")
         return html
 
-    print(f"FETCH {url}")
     headers = {"User-Agent": USER_AGENT}
-    response = requests.get(url, headers=headers, timeout=TIMEOUT_SECONDS)
-    stats["pages_fetched"] += 1
+    last_error: Exception | None = None
 
-    if response.status_code != 200:
-        raise requests.HTTPError(f"status={response.status_code} url={url}", response=response)
+    for attempt in range(1, 3):
+        try:
+            print(f"FETCH {url} attempt={attempt}")
+            response = requests.get(url, headers=headers, timeout=TIMEOUT_SECONDS)
+            stats["pages_fetched"] += 1
 
-    html = response.text
-    path.write_text(html, encoding="utf-8")
-    print(f"FETCHED {url} size={len(html)}")
-    time.sleep(REQUEST_DELAY_SECONDS)
-    return html
+            if response.status_code != 200:
+                error = requests.HTTPError(f"status={response.status_code} url={url}", response=response)
+                if should_retry(response.status_code) and attempt == 1:
+                    last_error = error
+                    time.sleep(1)
+                    continue
+                raise error
+
+            html = response.text
+            path.write_text(html, encoding="utf-8")
+            print(f"FETCHED {url} size={len(html)}")
+            time.sleep(REQUEST_DELAY_SECONDS)
+            return html
+        except requests.Timeout as exc:
+            last_error = exc
+            if attempt == 1:
+                time.sleep(1)
+                continue
+            raise
+        except requests.RequestException as exc:
+            last_error = exc
+            raise
+
+    raise RuntimeError(f"fetch failed: {url}") from last_error
+
+
+def build_run_report(
+    started_at: str,
+    duration_seconds: float,
+    stats: dict[str, Any],
+    valid_records: list[dict[str, Any]],
+    errors: list[dict[str, Any]],
+    failed_pages: list[dict[str, str]],
+) -> dict[str, Any]:
+    return {
+        "started_at": started_at,
+        "duration_seconds": round(duration_seconds, 2),
+        "pages_fetched": stats["pages_fetched"],
+        "cache_hits": stats["cache_hits"],
+        "valid_records": len(valid_records),
+        "invalid_records": len(errors),
+        "failed_pages": len(failed_pages),
+        "failed_page_details": failed_pages,
+    }
+
+
 
 def soup_from_html(html: str) -> BeautifulSoup:
     return BeautifulSoup(html, "html.parser")
@@ -203,23 +249,42 @@ def write_json(path: Path, data: Any) -> None:
 
 
 
-def run() -> None:
+def run(include_fake_url: bool = True) -> None:
+    started_at = now_utc()
+    start_time = time.perf_counter()
     stats = {
         "pages_fetched": 0,
         "cache_hits": 0,
     }
+    failed_pages: list[dict[str, str]] = []
+
     book_urls, source_pages = discover_book_urls(stats, max_pages=3)
-    raw_records = [
-        extract_raw_record(url, source_pages[url], stats)
-        for url in book_urls
-    ]
+
+    if include_fake_url:
+        fake_url = urljoin(BASE_URL, "catalogue/this-page-does-not-exist/index.html")
+        book_urls.append(fake_url)
+        source_pages[fake_url] = START_URL
+
+    raw_records: list[dict[str, Any]] = []
+    for url in book_urls:
+        try:
+            raw_records.append(extract_raw_record(url, source_pages[url], stats))
+        except Exception as exc:
+            failed_pages.append({"url": url, "reason": str(exc)})
+
     valid_records, errors = validate_records(raw_records)
 
     write_json(OUTPUT_DIR / "books.json", valid_records)
     write_json(OUTPUT_DIR / "errors.json", errors)
 
-    print(f"valid_records={len(valid_records)}")
-    print(f"invalid_records={len(errors)}")
+    report = build_run_report(
+        started_at=started_at,
+        duration_seconds=time.perf_counter() - start_time,
+        stats=stats,
+        valid_records=valid_records,
+        errors=errors,
+        failed_pages=failed_pages,
+    )
+    write_json(OUTPUT_DIR / "run-report.json", report)
 
-
-
+    print(json.dumps(report, indent=2))
