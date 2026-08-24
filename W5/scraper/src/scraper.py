@@ -5,7 +5,9 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
+
+from bs4 import BeautifulSoup
 
 import requests
 
@@ -56,11 +58,59 @@ def fetch_html(url: str, stats: dict[str, Any], *, use_cache: bool = True) -> st
     time.sleep(REQUEST_DELAY_SECONDS)
     return html
 
+def soup_from_html(html: str) -> BeautifulSoup:
+    return BeautifulSoup(html, "html.parser")
+
+
+def extract_book_urls(html: str, page_url: str) -> list[str]:
+    soup = soup_from_html(html)
+    urls: list[str] = []
+
+    for article in soup.select("article.product_pod"):
+        link = article.select_one("h3 a")
+        if not link or not link.get("href"):
+            continue
+        urls.append(urljoin(page_url, link["href"]))
+
+    return urls
+
+
+def extract_next_page_url(html: str, page_url: str) -> str | None:
+    soup = soup_from_html(html)
+    next_link = soup.select_one("li.next a")
+    if not next_link or not next_link.get("href"):
+        return None
+    return urljoin(page_url, next_link["href"])
+
+
+def discover_book_urls(stats: dict[str, Any], max_pages: int = 3) -> tuple[list[str], dict[str, str]]:
+    page_url: str | None = START_URL
+    catalogue_pages = 0
+    discovered: list[str] = []
+    source_pages: dict[str, str] = {}
+
+    while page_url and catalogue_pages < max_pages:
+        html = fetch_html(page_url, stats)
+        catalogue_pages += 1
+
+        for book_url in extract_book_urls(html, page_url):
+            discovered.append(book_url)
+            source_pages[book_url] = page_url
+
+        page_url = extract_next_page_url(html, page_url)
+
+    unique_urls = list(dict.fromkeys(discovered))
+    print(f"catalogue_pages={catalogue_pages}")
+    print(f"discovered={len(discovered)}")
+    print(f"unique_urls={len(unique_urls)}")
+    return unique_urls, source_pages
+
+
 
 def run() -> None:
     stats = {
         "pages_fetched": 0,
         "cache_hits": 0,
     }
-    html = fetch_html(START_URL, stats)
-    print(f"response_size={len(html)}")
+    discover_book_urls(stats, max_pages=3)
+
